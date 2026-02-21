@@ -1,0 +1,1 @@
+export const API_URL = "http://app-social-xp05.onrender.com"
