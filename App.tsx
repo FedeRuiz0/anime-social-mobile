@@ -1,5 +1,6 @@
 import { NavigationContainer } from "@react-navigation/native"
 import { createNativeStackNavigator } from "@react-navigation/native-stack"
+import * as Authsession from "expo-auth-session"
 
 import LoginScreen from "./src/screens/LoginScreen"
 import HomeScreen from "./src/screens/HomeScreen"
@@ -18,3 +19,9 @@ export default function App() {
     </NavigationContainer>
   )
 }
+
+console.log(
+  Authsession.makeRedirectUri({
+    scheme: "anime-social-mobile",
+  })
+)
