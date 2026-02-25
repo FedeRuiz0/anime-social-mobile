@@ -23,6 +23,7 @@ export default function LoginScreen() {
 
   const [request, response, promptAsync] = Google.useAuthRequest({
     androidClientId: AUTH_CONFIG.googleAndroidClientId,
+    webClientId: AUTH_CONFIG.googleWebClientId || undefined,
     responseType: AuthSession.ResponseType.IdToken,
     scopes: ["openid", "profile", "email"],
   })
@@ -33,7 +34,16 @@ export default function LoginScreen() {
     const completeLogin = async () => {
       if (response?.type !== "success") {
         if (response?.type === "error") {
-          setErrorMessage(response.error?.message ?? "Google sign-in failed")
+          const providerMessage =
+            response.error?.params?.error_description ?? response.error?.message ?? ""
+
+          if (providerMessage.includes("custom scheme URIs are not allowed for 'web' client type")) {
+            setErrorMessage(
+              "Google OAuth config error: use an Android OAuth client ID in EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID (not a Web client ID).",
+            )
+          } else {
+            setErrorMessage(providerMessage || "Google sign-in failed")
+          }
         }
         return
       }
