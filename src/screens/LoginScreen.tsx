@@ -1,32 +1,61 @@
+import { useEffect, useMemo, useState } from "react"
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
+  ActivityIndicator,
   ImageBackground,
+  Pressable,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  View,
 } from "react-native"
-
+import * as AuthSession from "expo-auth-session"
 import * as Google from "expo-auth-session/providers/google"
 import * as WebBrowser from "expo-web-browser"
-import { useEffect } from "react"
+
+import { AUTH_CONFIG } from "../config/auth"
+import { useAuth } from "../hooks/useAuth"
 
 WebBrowser.maybeCompleteAuthSession()
 
-export default function LoginScreen({ navigation }: any) {
+export default function LoginScreen() {
+  const { signInWithGoogleIdToken, isLoading } = useAuth()
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
-  // 🔹 SOLO androidClientId
   const [request, response, promptAsync] = Google.useAuthRequest({
-    androidClientId:
-      "938209210499-impjd0og5lqmffhucjsiu3uhd016grlo.apps.googleusercontent.com",
+    androidClientId: AUTH_CONFIG.googleAndroidClientId,
+    responseType: AuthSession.ResponseType.IdToken,
+    scopes: ["openid", "profile", "email"],
   })
 
+  const isDisabled = useMemo(() => !request || isLoading, [isLoading, request])
+
   useEffect(() => {
-    if (response?.type === "success") {
-      const { authentication } = response
-      console.log("ACCESS TOKEN:", authentication?.accessToken)
-      navigation.navigate("Home")
+    const completeLogin = async () => {
+      if (response?.type !== "success") {
+        if (response?.type === "error") {
+          setErrorMessage(response.error?.message ?? "Google sign-in failed")
+        }
+        return
+      }
+
+      const idToken = response.authentication?.idToken
+      if (!idToken) {
+        setErrorMessage("Google response did not include an ID token")
+        return
+      }
+
+      try {
+        setErrorMessage(null)
+        await signInWithGoogleIdToken(idToken)
+      } catch (error) {
+        setErrorMessage(
+          error instanceof Error ? error.message : "Unable to sign in right now",
+        )
+      }
     }
-  }, [response])
+
+    void completeLogin()
+  }, [response, signInWithGoogleIdToken])
 
   return (
     <ImageBackground
@@ -37,26 +66,39 @@ export default function LoginScreen({ navigation }: any) {
       resizeMode="cover"
     >
       <View style={styles.overlay} />
-
-      <Text style={styles.logo}>Amino</Text>
-      <Text style={styles.subtitle}>
-        Your interests…times infinity
-      </Text>
-
-      <View style={styles.buttons}>
-
-        {/* Google */}
-        <TouchableOpacity
-          style={styles.signupBtn}
-          disabled={!request}
-          onPress={() => promptAsync()}
-        >
-          <Text style={styles.signupText}>
-            Continue with Google
+      <SafeAreaView style={styles.content}>
+        <View>
+          <Text style={styles.eyebrow}>ANIME SOCIAL MOBILE</Text>
+          <Text style={styles.title}>Join your anime universe</Text>
+          <Text style={styles.subtitle}>
+            Secure Google sign-in for your personalized feed, communities, and chats.
           </Text>
-        </TouchableOpacity>
+        </View>
 
-      </View>
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Authentication</Text>
+          <Text style={styles.cardBody}>
+            We verify your Google identity before creating your app session.
+          </Text>
+
+          <Pressable
+            style={[styles.googleButton, isDisabled && styles.googleButtonDisabled]}
+            disabled={isDisabled}
+            onPress={() => {
+              setErrorMessage(null)
+              void promptAsync()
+            }}
+          >
+            {isLoading ? (
+              <ActivityIndicator color="#161a35" size="small" />
+            ) : (
+              <Text style={styles.googleButtonText}>Continue with Google</Text>
+            )}
+          </Pressable>
+
+          {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+        </View>
+      </SafeAreaView>
     </ImageBackground>
   )
 }
@@ -64,38 +106,76 @@ export default function LoginScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
-    padding: 24,
+    backgroundColor: "#0a1022",
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0,0,40,0.6)",
+    backgroundColor: "rgba(7, 12, 34, 0.75)",
   },
-  logo: {
-    color: "white",
-    fontSize: 48,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginBottom: 8,
+  content: {
+    flex: 1,
+    justifyContent: "space-between",
+    paddingHorizontal: 24,
+    paddingTop: 42,
+    paddingBottom: 32,
+  },
+  eyebrow: {
+    color: "#9ca8ff",
+    fontSize: 12,
+    fontWeight: "700",
+    letterSpacing: 1.8,
+    marginBottom: 16,
+  },
+  title: {
+    color: "#ffffff",
+    fontSize: 34,
+    lineHeight: 40,
+    fontWeight: "800",
+    marginBottom: 14,
   },
   subtitle: {
-    color: "#ddd",
-    textAlign: "center",
-    marginBottom: 40,
+    color: "#c8cdee",
     fontSize: 16,
+    lineHeight: 24,
+    maxWidth: 320,
   },
-  buttons: {
-    gap: 12,
+  card: {
+    backgroundColor: "rgba(15, 21, 47, 0.92)",
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "#303a68",
+    padding: 18,
   },
-  signupBtn: {
-    backgroundColor: "#30D8D8",
-    padding: 14,
-    borderRadius: 12,
+  cardTitle: {
+    color: "#ffffff",
+    fontSize: 19,
+    fontWeight: "700",
+    marginBottom: 8,
+  },
+  cardBody: {
+    color: "#b4bcdf",
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 14,
+  },
+  googleButton: {
     alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#7de1ff",
+    borderRadius: 12,
+    minHeight: 48,
   },
-  signupText: {
-    fontWeight: "bold",
-    fontSize: 16,
-    color: "#001",
+  googleButtonDisabled: {
+    opacity: 0.6,
+  },
+  googleButtonText: {
+    color: "#161a35",
+    fontWeight: "800",
+    fontSize: 15,
+  },
+  errorText: {
+    marginTop: 10,
+    color: "#ff9fb6",
+    fontSize: 13,
   },
 })
