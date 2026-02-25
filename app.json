@@ -2,7 +2,7 @@
   "expo": {
     "name": "anime-social-mobile",
     "slug": "anime-social-mobile",
-    "scheme": "anime-social-mobile",
+    "scheme": "animesocial",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",

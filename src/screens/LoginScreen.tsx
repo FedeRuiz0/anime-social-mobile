@@ -8,7 +8,6 @@ import {
   Text,
   View,
 } from "react-native"
-import * as AuthSession from "expo-auth-session"
 import * as Google from "expo-auth-session/providers/google"
 import * as WebBrowser from "expo-web-browser"
 
@@ -23,7 +22,6 @@ export default function LoginScreen() {
 
   const [request, response, promptAsync] = Google.useAuthRequest({
     androidClientId: AUTH_CONFIG.googleAndroidClientId,
-    responseType: AuthSession.ResponseType.IdToken,
     scopes: ["openid", "profile", "email"],
   })
 
@@ -31,14 +29,17 @@ export default function LoginScreen() {
 
   useEffect(() => {
     const completeLogin = async () => {
-      if (response?.type !== "success") {
-        if (response?.type === "error") {
-          setErrorMessage(response.error?.message ?? "Google sign-in failed")
+      if (!response) return
+
+      if (response.type !== "success") {
+        if (response.type === "error") {
+          setErrorMessage("Google sign-in failed")
         }
         return
       }
 
       const idToken = response.authentication?.idToken
+
       if (!idToken) {
         setErrorMessage("Google response did not include an ID token")
         return
@@ -49,7 +50,9 @@ export default function LoginScreen() {
         await signInWithGoogleIdToken(idToken)
       } catch (error) {
         setErrorMessage(
-          error instanceof Error ? error.message : "Unable to sign in right now",
+          error instanceof Error
+            ? error.message
+            : "Unable to sign in right now",
         )
       }
     }
@@ -92,11 +95,15 @@ export default function LoginScreen() {
             {isLoading ? (
               <ActivityIndicator color="#161a35" size="small" />
             ) : (
-              <Text style={styles.googleButtonText}>Continue with Google</Text>
+              <Text style={styles.googleButtonText}>
+                Continue with Google
+              </Text>
             )}
           </Pressable>
 
-          {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+          {errorMessage ? (
+            <Text style={styles.errorText}>{errorMessage}</Text>
+          ) : null}
         </View>
       </SafeAreaView>
     </ImageBackground>
