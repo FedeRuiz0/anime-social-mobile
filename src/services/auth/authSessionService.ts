@@ -1,9 +1,7 @@
-import { AUTH_CONFIG } from "../../config/auth"
 import type { AuthSession, BackendAuthResponse } from "../../types/auth"
 import {
   exchangeGoogleIdToken,
   refreshBackendToken,
-  validateGoogleIdToken,
 } from "./authApi"
 
 function mapBackendSession(payload: BackendAuthResponse): AuthSession {
@@ -20,7 +18,7 @@ function mapBackendSession(payload: BackendAuthResponse): AuthSession {
 export async function createSessionFromGoogleIdToken(
   idToken: string,
 ): Promise<AuthSession> {
-  await validateGoogleIdToken(idToken, AUTH_CONFIG.googleAndroidClientId)
+  // El backend se encarga de validar el token de Google
   const backendPayload = await exchangeGoogleIdToken(idToken)
   return mapBackendSession(backendPayload)
 }
