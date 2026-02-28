@@ -37,12 +37,21 @@ export async function validateGoogleIdToken(
 export async function exchangeGoogleIdToken(
   idToken: string,
 ): Promise<BackendAuthResponse> {
-  const response = await authClient.post<BackendAuthResponse>(
-    AUTH_ENDPOINTS.googleVerify,
-    { idToken },
-  )
-
-  return response.data
+  console.log("[AuthAPI] Exchanging Google ID token to backend...")
+  console.log("[AuthAPI] Endpoint:", API_URL + AUTH_ENDPOINTS.googleVerify)
+  
+  try {
+    const response = await authClient.post<BackendAuthResponse>(
+      AUTH_ENDPOINTS.googleVerify,
+      { idToken },
+    )
+    
+    console.log("[AuthAPI] Backend response received:", response.data)
+    return response.data
+  } catch (error) {
+    console.log("[AuthAPI] Error exchanging token:", error)
+    throw error
+  }
 }
 
 export async function refreshBackendToken(

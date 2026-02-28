@@ -98,14 +98,27 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
   const signInWithGoogleIdToken = useCallback(
     async (idToken: string) => {
+      console.log("[AuthContext] signInWithGoogleIdToken called")
       setIsLoading(true)
       try {
+        console.log("[AuthContext] Creating session from Google ID token...")
         const nextSession = await createSessionFromGoogleIdToken(idToken)
+        console.log("[AuthContext] Session created:", nextSession)
+        
         setSession(nextSession)
+        console.log("[AuthContext] Session set in state")
+        
         await sessionStorage.setSession(nextSession)
+        console.log("[AuthContext] Session saved to storage")
+        
         scheduleRefresh(nextSession)
+        console.log("[AuthContext] Refresh scheduled")
+      } catch (error) {
+        console.log("[AuthContext] Error during sign in:", error)
+        throw error
       } finally {
         setIsLoading(false)
+        console.log("[AuthContext] isLoading set to false")
       }
     },
     [scheduleRefresh],
