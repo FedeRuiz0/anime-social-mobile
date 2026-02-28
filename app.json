@@ -1,36 +1,30 @@
 {
   "expo": {
-    "name": "anime-social-mobile",
+    "name": "Anime Social Mobile",
     "slug": "anime-social-mobile",
     "scheme": "animesocial",
-    "version": "1.0.0",
-    "orientation": "portrait",
-    "icon": "./assets/icon.png",
-    "userInterfaceStyle": "dark",
-    "newArchEnabled": true,
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
-    "ios": {
-      "supportsTablet": true
-    },
+    "platforms": ["android"],
+
     "android": {
+      "package": "com.kaoh.animesocialmobile",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false,
-      "package": "com.kaoh.animesocialmobile"
+      "predictiveBackGestureEnabled": false
     },
+
+    "ios": {
+      "supportsTablet": true
+    },
+
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "plugins": [
-      "expo-web-browser"
-    ],
+
+    "plugins": ["expo-web-browser"],
+
     "extra": {
       "eas": {
         "projectId": "2cea8cfd-a4a8-40d4-9840-4bf0e08d3134"
