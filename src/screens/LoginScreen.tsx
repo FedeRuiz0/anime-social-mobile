@@ -10,21 +10,32 @@ import {
 } from "react-native"
 import * as Google from "expo-auth-session/providers/google"
 import * as WebBrowser from "expo-web-browser"
+import * as Linking from "expo-linking"
+import * as AuthSession from "expo-auth-session"
 
 import { AUTH_CONFIG } from "../config/auth"
 import { useAuth } from "../hooks/useAuth"
 
 WebBrowser.maybeCompleteAuthSession()
 
+// Generar el redirectUri correctamente para producción y desarrollo
+// IMPORTANTE: debe coincidir con android:host="redirect" en AndroidManifest
+const redirectUri = AuthSession.makeRedirectUri({
+  scheme: "animesocial",
+  path: "redirect", // Coincide con android:host="redirect" en AndroidManifest
+  preferLocalhost: false,
+})
+
 export default function LoginScreen() {
   const { signInWithGoogleIdToken, isLoading } = useAuth()
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   // Configuración del auth request para Google
-  // Para Android usamos el flujo nativo sin especificar redirectUri
+  // Especificamos el redirectUri para que Google sepa dónde redirigir
   const [request, response, promptAsync] = Google.useAuthRequest({
     androidClientId: AUTH_CONFIG.googleAndroidClientId,
     scopes: ["openid", "profile", "email"],
+    redirectUri,
   })
 
   const isDisabled = useMemo(() => !request || isLoading, [isLoading, request])
@@ -34,11 +45,15 @@ export default function LoginScreen() {
 
     console.log("[Login] Response received:", response)
     console.log("[Login] Response type:", response.type)
+    console.log("[Login] Redirect URI used:", redirectUri)
 
     if (response.type !== "success") {
       if (response.type === "error") {
         console.log("[Login] Error:", response.error)
         setErrorMessage("Google sign-in failed")
+      }
+      if (response.type === "dismiss") {
+        console.log("[Login] User dismissed the auth session")
       }
       return
     }
